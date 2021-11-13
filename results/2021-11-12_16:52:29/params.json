@@ -1,0 +1,10 @@
+{
+    "percent_of_users_used": "1.0%",
+    "population_size": 100,
+    "number_of_offspring": 40,
+    "term_on_generation_n": 20,
+    "n_partitions": 12,
+    "number_of_threads": 12,
+    "random_seed": 0,
+    "time_taken_minutes": 111.09
+}

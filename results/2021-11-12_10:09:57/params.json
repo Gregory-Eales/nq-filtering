@@ -1,0 +1,8 @@
+{
+    "percent_of_data_used": 0.01,
+    "population_size": 80,
+    "number_of_offspring": 20,
+    "number_of_threads": 5,
+    "random_seed": 0,
+    "time_taken_minutes": 0.0
+}

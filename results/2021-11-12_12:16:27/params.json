@@ -1,0 +1,8 @@
+{
+    "percent_of_users_used": "1.0%",
+    "population_size": 100,
+    "number_of_offspring": 20,
+    "number_of_threads": 5,
+    "random_seed": 0,
+    "time_taken_minutes": 68.25
+}
