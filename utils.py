@@ -16,7 +16,11 @@ def generate_data(path='./data/partner_users_dataset.csv', user_pct = 0.2):
     
     # only select a percentage of users
     num_users = int(user_pct*num_users)
-        
+    
+    print(df.shape)
+    df = df[df['group_id'].isin([4, 14, 18, 22, 51, 64, 60])]    
+    print(df.shape)
+    
     df = df[df['user_id'].isin(user_ids[0:num_users])]
     df = df.sort_values(by=['click_timestamp'])
     df = df.groupby(['group_id', 'user_id'])
