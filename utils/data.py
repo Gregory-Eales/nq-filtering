@@ -1,4 +1,5 @@
-from random import shuffle
+from matplotlib import pyplot as plt
+from random import shuffle, seed
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
@@ -7,8 +8,10 @@ import time
 import os
 
 
-def generate_data(path='./data/partner_users_dataset.csv', user_pct = 0.2):
+def generate_data(path='./data/partner_users_dataset.csv', user_pct=0.2, random_seed=1):
     
+    seed(random_seed)
+
     df = pd.read_csv(path)
     df = df.fillna(0)
     
@@ -23,7 +26,7 @@ def generate_data(path='./data/partner_users_dataset.csv', user_pct = 0.2):
     
     print_msg('{} users selected'.format(num_users))
     
-    df = df[df['group_id'].isin([4, 14, 18, 22, 51, 64, 60])]    
+    df = df[df['group_id'].isin([4, 18, 22, 64, 60])]    
     df = df[df['user_id'].isin(user_ids[0:num_users])]
     
     print_msg('loaded {} rows from selected users'.format("{:,}".format(df.shape[0])))
@@ -43,28 +46,37 @@ def generate_data(path='./data/partner_users_dataset.csv', user_pct = 0.2):
 
 def save_optimization_results(F, X, params, folder_name=''):
     
+    # save experiment params
     with open("./results/{}/{}".format(folder_name, "params.json"), "w") as outfile:
         json.dump(params, outfile, indent=4)
     
+
+    # make data presentable
+    F[:, 0:2] = -1*F[:, 0:2]
+    F = np.around(100*F, decimals=2)
+
+    X = np.around(X, decimals=2)
+
     df = pd.DataFrame(
         data=np.concatenate((F, X), axis=1),
         columns=[
-            'Negative Rev',
-            'Neg IR',
-            'NQ Rate',
+            'Revenue (%)',
+            'IR (%)',
+            'NQ-0s (%)',
             'days_to_look',
             'days_to_block',
-            'min_click_to_block',
             'min_nq_pct_to_block',
             'min_nq_to_block',
+            'max_term_time'
         ]
     )
+
+    df.index.name='index'
     
     df.to_csv("./results/{}/{}".format(folder_name, "results.csv"))
     
-    
     plt.figure(figsize=(7, 5))
-    plt.scatter(F[:, 2], -1*F[:, 0], s=30, facecolors='none', edgecolors='blue')
+    plt.scatter(F[:, 2], F[:, 0], s=30, facecolors='none', edgecolors='blue')
     plt.title("Objective Space")
     plt.xlabel("nqs")
     plt.ylabel("revenue")

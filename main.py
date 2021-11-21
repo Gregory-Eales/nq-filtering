@@ -9,7 +9,7 @@ import pymoo
 # import modules
 from multiprocessing.pool import ThreadPool
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.factory import get_sampling, get_crossover, get_mutation, get_reference_directions, get_termination
+from pymoo.factory import get_sampling, get_crossover, get_mutation, get_termination
 from pymoo.optimize import minimize
 import numpy as np
 
@@ -25,7 +25,7 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
     '''
     print_msg('loading data')
     
-    data = generate_data(path='./data/partner_users_dataset.csv', user_pct=user_pct)
+    data = generate_data(path='./data/partner_users_dataset.csv', user_pct=user_pct, random_seed=1)
     
     print_msg('data loaded')
     print_msg('estimating runtime')
@@ -45,9 +45,6 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
         func_eval=starmap_parallelized_eval,
         data=data
     )
-    
-    # create the reference directions to be used for the optimization
-    ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=n_partitions)
 
     # optimization algorithm to use (may need to play around with this)
     algorithm = NSGA2(
@@ -57,7 +54,6 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
         crossover=get_crossover("real_sbx", prob=0.9, eta=15),
         mutation=get_mutation("real_pm", eta=20),
         eliminate_duplicates=True,
-        ref_dirs=ref_dirs
     )
 
     termination = get_termination("n_gen", term_gens)
@@ -80,11 +76,10 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
         
         print_msg('saving results')
         params = {
-            'percent_of_users_used': '{}%'.format(round(100*user_pct, 0)),
+            'percent_of_users_used': '{}%'.format(round(100*user_pct, 2)),
             'population_size': population_size,
             'number_of_offspring': n_offsprings,
             'term_on_generation_n': term_gens,
-            'n_partitions': n_partitions,
             'number_of_threads': n_threads,
             'random_seed': random_seed,
             'time_taken_minutes': round((time.time() - start_time)/60, 2)
@@ -100,11 +95,12 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
 
 def main():
     
-    #optimize_nq_filtering(user_pct=0.01, population_size=20, n_offsprings=20, term_gens=20, n_threads=12, random_seed=0, save=True, verbose=True)
+    #optimize_nq_filtering(user_pct=0.025, population_size=100, n_offsprings=10, term_gens=30, n_threads=12, random_seed=0, save=True, verbose=True)
     
-    data = generate_data(path='./data/partner_users_dataset.csv', user_pct=0.01)
-    simulate_filtering(data, x=[26.44, 20.87, 13.92, 41.31, 14.89], verbose=True, filter_nqs=True)
-    
-    
+    data = generate_data(path='./data/partner_users_dataset.csv', user_pct=0.1, random_seed=1)
+    t = time.time()
+    simulate_filtering(data, x=[16.31, 23.41, 25.42, 25.05, 31.63], verbose=True, filter_nqs=True)
+    print('execution time: {} seconds'.format(round(time.time()-t, 4)))
+
 if __name__ == '__main__':
     main()
