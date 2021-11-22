@@ -91,16 +91,92 @@ def optimize_nq_filtering(user_pct=0.01, population_size=100, n_offsprings=20, t
         save_optimization_results(F, X, params, folder_name=folder_name)
         
     print_msg('done')
+
+
+def test_optimized_parameters():
+
+    # load data
+    data = generate_data(path='./data/partner_users_dataset.csv', user_pct=0.25, random_seed=1)
+
+    result_paths = os.listdir('./results')
+    result_paths.sort()
+
+    print_msg('testing results run on: {}'.format(result_paths[-1]))
+
+    # load optimal parameters
+
+    df = pd.read_csv('./results/{}/results.csv'.format(result_paths[-1]))
+
+
+    params = df[[
+        'days_to_look',
+        'days_to_block',
+        'min_nq_pct_to_block',
+        'min_nq_to_block',
+        'max_term_time',
+        ]]
+
+
+    ap_df = pd.DataFrame(columns = [
+        'Revenue',
+        'Clicks',
+        'Completes',
+        'IR',
+        'EPC',
+        'NQ-0s',
+        'NQ-Rate',
+        'days_to_look',
+        'days_to_block',
+        'min_nq_pct_to_block',
+        'min_nq_to_block',
+        'max_term_time',
+        ]) 
+
+    for i in range(-1, params.shape[0]):
+
+        if i == -1:
+            results = simulate_filtering(data, x=params.iloc[i+1].tolist(), verbose=False, filter_nqs=False)
+
+        else:
+            results = simulate_filtering(data, x=params.iloc[i].tolist(), verbose=False, filter_nqs=True)
+        
+        df_length = len(ap_df)
+
+        a_series = pd.Series([
+            results['revenue'],
+            results['clicks'],
+            results['completes'],
+            results['ir'],
+            results['epc'],
+            results['nqs'],
+            results['nq_rate'],
+            results['days_to_look'],
+            results['days_to_block'],
+            results['min_nq_pct_to_block'],
+            results['min_nq_to_block'],
+            results['max_term_time']
+        ], index = ap_df.columns)
+
+        ap_df = ap_df.append(a_series, ignore_index=True)
+
+    ap_df.to_csv("./results/{}/{}".format(result_paths[-1], "appended_results.csv"))
+
+
+    
     
 
 def main():
     
     #optimize_nq_filtering(user_pct=0.025, population_size=100, n_offsprings=10, term_gens=30, n_threads=12, random_seed=0, save=True, verbose=True)
     
+    '''
     data = generate_data(path='./data/partner_users_dataset.csv', user_pct=0.1, random_seed=1)
     t = time.time()
     simulate_filtering(data, x=[16.31, 23.41, 25.42, 25.05, 31.63], verbose=True, filter_nqs=True)
     print('execution time: {} seconds'.format(round(time.time()-t, 4)))
+    '''
+    test_optimized_parameters()
+
 
 if __name__ == '__main__':
     main()

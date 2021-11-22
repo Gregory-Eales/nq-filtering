@@ -60,7 +60,7 @@ def simulate_filtering(data, x=[7, 7, 5, 20, 8], verbose=True, filter_nqs=True):
     block_times = {}
     last_blocks = {}
     
-    for user in list(data.keys()):    
+    for user in tqdm(list(data.keys())):    
         
         block_time = {}
         is_filtered = {}
@@ -73,7 +73,7 @@ def simulate_filtering(data, x=[7, 7, 5, 20, 8], verbose=True, filter_nqs=True):
             block_time[group_id] = None
             is_filtered[group_id] = False
 
-        for click in tqdm(data[user]):
+        for click in data[user]:
             
             result = click[data_map['result']]
             click_time = click[data_map['click_timestamp']]
@@ -211,6 +211,7 @@ def simulate_filtering(data, x=[7, 7, 5, 20, 8], verbose=True, filter_nqs=True):
                         is_filtered[nest_group_id] = False
                         block_time[best_group_id] = None
 
+    results = {}
                                         
     if verbose:
 
@@ -253,12 +254,28 @@ def simulate_filtering(data, x=[7, 7, 5, 20, 8], verbose=True, filter_nqs=True):
             filename='user_filter_counts'
             )
         '''
+
+    # sim stats
+    results['revenue'] = round(total_revenue, 2)
+    results['clicks'] = total_clicks
+    results['completes'] = total_completes
+    results['ir'] = round(total_completes/total_clicks, 2)
+    results['epc'] = round(total_revenue/total_clicks, 2)
+    results['nqs'] = round(total_nqs, 2)
+    results['nq_rate'] = round(100*total_nqs/total_clicks, 2)
+
+    # filtering params
+    results['days_to_look'] = days_to_look
+    results['days_to_block'] = days_to_block
+    results['min_nq_pct_to_block'] = min_nq_pct_to_block
+    results['min_nq_to_block'] = min_nq_to_block
+    results['max_term_time'] = max_term_time
     
-    ir = round(total_completes/total_clicks, 4)
-    nq_rate = round(total_nqs/max_nqs, 4)
-    pct_revenue = round(total_revenue/max_revenue, 4)
+    # optimization params
+    results['pct_revenue'] = round(total_revenue/max_revenue, 4) 
+    results['pct_nq'] = round(total_nqs/max_nqs, 4)
  
-    return pct_revenue, ir, nq_rate
+    return results
 
 
 # define problem
@@ -286,11 +303,11 @@ class FilteringNQs(ElementwiseProblem):
       
     def _evaluate(self, x, out, *args, **kwargs):
         
-        pct_revenue, ir, nq_rate = simulate_filtering(self.data, x=x, verbose=False, filter_nqs=True)
+        results = simulate_filtering(self.data, x=x, verbose=False, filter_nqs=True)
         
-        f1 = -1 * pct_revenue # need to make metrics negative for minimization 
-        f2 = -1 * ir
-        f3 = nq_rate
+        f1 = -1 * results['pct_revenue'] # need to make metrics negative for minimization 
+        f2 = -1 * results['ir']
+        f3 = results['pct_nq']
         
         out["F"] = [f1, f2, f3]
         out["G"] = [0.75 + f1]
